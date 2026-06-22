@@ -1,0 +1,175 @@
+"""LLM agent: Groq-backed conversational agent with tool use.
+
+The agent handles incoming visitor messages, maintains conversation history,
+and can invoke tools:
+  - generate_pipeline_token(name, email) — issues a DataForge access token
+  - escalate_to_human(reason)            — pings Discord + flags session
+  - (answers FAQ from its system prompt)
+
+All tool results are streamed back as chat messages.
+"""
+
+from __future__ import annotations
+
+import json
+from typing import Any
+
+import httpx
+from groq import AsyncGroq
+
+from app.core.config import settings
+
+_TOOLS: list[dict[str, Any]] = [
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_pipeline_token",
+            "description": (
+                "Issue a DataForge ELT pipeline access token and email it directly to "
+                "the visitor. Use this when the visitor clearly wants to run the pipeline "
+                "and has provided their name and email."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Visitor's full name"},
+                    "email": {"type": "string", "description": "Visitor's email address"},
+                },
+                "required": ["name", "email"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "escalate_to_human",
+            "description": (
+                "Flag this session for human takeover and notify Ray via Discord. "
+                "Use when the visitor asks about job opportunities, consulting, "
+                "custom work, or anything requiring a human decision."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "description": "Brief reason for escalation",
+                    }
+                },
+                "required": ["reason"],
+            },
+        },
+    },
+]
+
+_SYSTEM_PROMPT = """You are Ray's portfolio assistant — a helpful, concise AI on raybags.com.
+
+Ray (Raymond Baguma) is a data engineer / full-stack developer. His portfolio showcases:
+- DataForge ELT: Python, FastAPI, DuckDB, dbt, Playwright crawlers, React dashboard
+- Data Annotation Platform: collaborative labelling tool
+- This chat system itself (event-driven, Redis pub/sub, LLM tool use)
+
+Your job:
+1. Answer questions about Ray's skills, projects, and background.
+2. Help visitors explore DataForge — they get one free pipeline run; if they need more, offer to issue a token (collect name + email first).
+3. If someone asks about hiring Ray, consulting, or anything that needs a real conversation, escalate to human.
+
+Rules:
+- Be concise. No bullet lists longer than 4 items. No corporate jargon.
+- Never make up facts about Ray. If unsure, say so.
+- Collect name + email before calling generate_pipeline_token.
+- Escalate promptly for job/consulting enquiries — don't try to handle them yourself.
+"""
+
+
+async def _call_portfolio_api(name: str, email: str) -> dict[str, Any]:
+    """Call portfolio backend to submit a pipeline request (which stores + notifies admin)."""
+    if not settings.PORTFOLIO_API_URL:
+        return {"ok": False, "detail": "Portfolio API not configured"}
+    async with httpx.AsyncClient(timeout=15) as client:
+        r = await client.post(
+            f"{settings.PORTFOLIO_API_URL}/pipeline-requests",
+            json={"name": name, "email": email, "reason": "Requested via chat"},
+        )
+        return r.json() if r.status_code < 300 else {"ok": False, "detail": r.text}
+
+
+async def _ping_discord(reason: str, session_id: str) -> None:
+    if not settings.DISCORD_WEBHOOK:
+        return
+    async with httpx.AsyncClient(timeout=10) as client:
+        await client.post(
+            settings.DISCORD_WEBHOOK,
+            json={
+                "embeds": [{
+                    "title": "Chat escalation — human needed",
+                    "color": 0xFF4444,
+                    "fields": [
+                        {"name": "Session", "value": session_id, "inline": True},
+                        {"name": "Reason", "value": reason, "inline": False},
+                    ],
+                    "footer": {"text": "raybags.com/chat"},
+                }]
+            },
+        )
+
+
+async def run_agent(
+    history: list[dict[str, str]],
+    session_id: str,
+) -> tuple[str, str | None]:
+    """Run one LLM turn.
+
+    Returns (reply_text, tool_called_name | None).
+    Raises on API errors.
+    """
+    if not settings.GROQ_API_KEY:
+        return "LLM not configured — please set GROQ_API_KEY.", None
+
+    client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+    messages = [{"role": "system", "content": _SYSTEM_PROMPT}, *history]
+
+    response = await client.chat.completions.create(
+        model=settings.GROQ_MODEL,
+        messages=messages,
+        tools=_TOOLS,
+        tool_choice="auto",
+        max_tokens=512,
+    )
+
+    choice = response.choices[0]
+    msg = choice.message
+    tool_name: str | None = None
+
+    if msg.tool_calls:
+        call = msg.tool_calls[0]
+        tool_name = call.function.name
+        args = json.loads(call.function.arguments)
+
+        if tool_name == "generate_pipeline_token":
+            result = await _call_portfolio_api(args["name"], args["email"])
+            if result.get("ok"):
+                reply = (
+                    f"Done! I've sent a pipeline access token to **{args['email']}**. "
+                    "Check your inbox — it expires in 48 hours. "
+                    "Visit https://raybags.com/dataforge/ and enter it when prompted."
+                )
+            else:
+                reply = (
+                    "Something went wrong issuing the token. "
+                    "Please try the request form at https://raybags.com/dataforge."
+                )
+
+        elif tool_name == "escalate_to_human":
+            await _ping_discord(args["reason"], session_id)
+            reply = (
+                "I've flagged this for Ray — he'll jump in shortly. "
+                "Feel free to keep chatting in the meantime."
+            )
+        else:
+            reply = "I'm not sure how to handle that right now."
+
+    else:
+        reply = msg.content or ""
+
+    return reply, tool_name

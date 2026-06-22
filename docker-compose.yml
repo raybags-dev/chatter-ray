@@ -1,0 +1,28 @@
+services:
+  chat-backend:
+    image: ${DOCKERHUB_USERNAME:-raybags}/raybags-chat-backend:${IMAGE_TAG:-latest}
+    restart: always
+    ports:
+      - "8010:8010"
+    env_file: .env.prod
+    depends_on: [chat-redis]
+
+  chat-frontend:
+    image: ${DOCKERHUB_USERNAME:-raybags}/raybags-chat-frontend:${IMAGE_TAG:-latest}
+    restart: always
+    ports:
+      - "8011:80"
+    depends_on: [chat-backend]
+
+  chat-redis:
+    image: redis:7-alpine
+    restart: always
+    # bind to localhost only — not exposed outside the host
+    ports:
+      - "127.0.0.1:6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - chat-redis-data:/data
+
+volumes:
+  chat-redis-data:
