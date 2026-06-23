@@ -92,6 +92,85 @@ async def _save(db: AsyncSession, session_id: str, sender: str,
     await db.commit()
 
 
+async def _is_admin_token(token: str) -> bool:
+    """Accept the static PORTFOLIO_ADMIN_TOKEN OR a valid portfolio admin JWT."""
+    from app.core.config import settings
+    if not token:
+        return False
+    if token == settings.PORTFOLIO_ADMIN_TOKEN:
+        return True
+    if not settings.PORTFOLIO_API_URL:
+        return False
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=5) as client:
+            r = await client.get(
+                f"{settings.PORTFOLIO_API_URL}/auth/me",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            if r.status_code == 200:
+                data = r.json()
+                return bool(data.get("is_superuser") or "admin" in str(data.get("roles", [])))
+    except Exception:
+        pass
+    return False
+
+
+# IMPORTANT: /ws/admin MUST be registered before /ws/{session_id} so FastAPI
+# matches the literal path first. Parameterised routes consume everything that
+# precedes them in the route list, including the literal "admin" segment.
+@router.websocket("/ws/admin")
+async def admin_ws(websocket: WebSocket) -> None:
+    """Admin WebSocket — subscribes to all sessions via the admin pub/sub channel.
+
+    Query param: ?token=<PORTFOLIO_ADMIN_TOKEN or portfolio admin JWT>
+    Accepts incoming JSON: {"type": "reply", "session_id": "...", "content": "..."}
+    """
+    token = websocket.query_params.get("token", "")
+    if not await _is_admin_token(token):
+        await websocket.close(code=4001)
+        return
+
+    await websocket.accept()
+    ps = await pubsub.subscribe(pubsub.ADMIN_CHANNEL)
+
+    async def _listener() -> None:
+        async for raw in ps.listen():
+            if raw["type"] != "message":
+                continue
+            try:
+                await websocket.send_json(json.loads(raw["data"]))
+            except Exception:
+                break
+
+    listen_task = asyncio.create_task(_listener())
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            if data.get("type") != "reply":
+                continue
+            target = data.get("session_id", "")
+            content = str(data.get("content", "")).strip()
+            if not target or not content:
+                continue
+
+            async with AsyncSessionLocal() as db:
+                await _save(db, target, "human", content)
+
+            msg = _envelope("human", content, target)
+            # Deliver to visitor via session channel
+            await pubsub.publish(pubsub.session_channel(target), msg)
+            # Echo back to admin channel so the admin panel shows it
+            await pubsub.publish(pubsub.ADMIN_CHANNEL, msg)
+
+    except WebSocketDisconnect:
+        pass
+    finally:
+        listen_task.cancel()
+        await ps.unsubscribe(pubsub.ADMIN_CHANNEL)
+
+
 @router.websocket("/ws/{session_id}")
 async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
     await websocket.accept()
@@ -225,79 +304,3 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
     finally:
         redis_task.cancel()
         await ps.unsubscribe(pubsub.session_channel(session_id))
-
-
-async def _is_admin_token(token: str) -> bool:
-    """Accept the static PORTFOLIO_ADMIN_TOKEN OR a valid portfolio admin JWT."""
-    from app.core.config import settings
-    if not token:
-        return False
-    if token == settings.PORTFOLIO_ADMIN_TOKEN:
-        return True
-    if not settings.PORTFOLIO_API_URL:
-        return False
-    try:
-        import httpx
-        async with httpx.AsyncClient(timeout=5) as client:
-            r = await client.get(
-                f"{settings.PORTFOLIO_API_URL}/auth/me",
-                headers={"Authorization": f"Bearer {token}"},
-            )
-            if r.status_code == 200:
-                data = r.json()
-                return bool(data.get("is_superuser") or "admin" in str(data.get("roles", [])))
-    except Exception:
-        pass
-    return False
-
-
-@router.websocket("/ws/admin")
-async def admin_ws(websocket: WebSocket) -> None:
-    """Admin WebSocket — subscribes to all sessions via the admin pub/sub channel.
-
-    Query param: ?token=<PORTFOLIO_ADMIN_TOKEN or portfolio admin JWT>
-    Accepts incoming JSON: {"type": "reply", "session_id": "...", "content": "..."}
-    """
-    token = websocket.query_params.get("token", "")
-    if not await _is_admin_token(token):
-        await websocket.close(code=4001)
-        return
-
-    await websocket.accept()
-    ps = await pubsub.subscribe(pubsub.ADMIN_CHANNEL)
-
-    async def _listener() -> None:
-        async for raw in ps.listen():
-            if raw["type"] != "message":
-                continue
-            try:
-                await websocket.send_json(json.loads(raw["data"]))
-            except Exception:
-                break
-
-    listen_task = asyncio.create_task(_listener())
-
-    try:
-        while True:
-            data = await websocket.receive_json()
-            if data.get("type") != "reply":
-                continue
-            target = data.get("session_id", "")
-            content = str(data.get("content", "")).strip()
-            if not target or not content:
-                continue
-
-            async with AsyncSessionLocal() as db:
-                await _save(db, target, "human", content)
-
-            msg = _envelope("human", content, target)
-            # Deliver to visitor via session channel
-            await pubsub.publish(pubsub.session_channel(target), msg)
-            # Echo back to admin channel so the admin panel shows it
-            await pubsub.publish(pubsub.ADMIN_CHANNEL, msg)
-
-    except WebSocketDisconnect:
-        pass
-    finally:
-        listen_task.cancel()
-        await ps.unsubscribe(pubsub.ADMIN_CHANNEL)
