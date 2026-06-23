@@ -103,13 +103,17 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
     redis_task = asyncio.create_task(_redis_listener())
 
     try:
-        # Greet new sessions
+        # Greet new sessions — check DB history; save greeting so reconnects don't re-greet
         async with AsyncSessionLocal() as db:
             history = await _history(db, session_id)
 
         if not history:
-            greeting = _envelope("agent", "Hi! I'm Raymond's AI assistant. Welcome to his portfolio — if you have any inquiries, requests, or questions, feel free to ask me.", session_id)
+            greeting_text = "Hi! I'm Raymond's AI assistant. Welcome to his portfolio — if you have any inquiries, requests, or questions, feel free to ask me."
+            greeting = _envelope("agent", greeting_text, session_id)
             await websocket.send_json(greeting)
+            # Persist so next reconnect with same session_id sees history and skips greeting
+            async with AsyncSessionLocal() as db:
+                await _save(db, session_id, "agent", greeting_text)
 
         while True:
             data = await websocket.receive_json()
@@ -174,18 +178,41 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
         await ps.unsubscribe(pubsub.session_channel(session_id))
 
 
+async def _is_admin_token(token: str) -> bool:
+    """Accept the static PORTFOLIO_ADMIN_TOKEN OR a valid portfolio admin JWT."""
+    from app.core.config import settings
+    if not token:
+        return False
+    if token == settings.PORTFOLIO_ADMIN_TOKEN:
+        return True
+    # Validate as portfolio admin JWT
+    if not settings.PORTFOLIO_API_URL:
+        return False
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=5) as client:
+            r = await client.get(
+                f"{settings.PORTFOLIO_API_URL}/auth/me",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            if r.status_code == 200:
+                data = r.json()
+                return bool(data.get("is_superuser") or "admin" in str(data.get("roles", [])))
+    except Exception:
+        pass
+    return False
+
+
 @router.websocket("/ws/admin")
 async def admin_ws(websocket: WebSocket) -> None:
     """Admin WebSocket — subscribes to all sessions via the admin pub/sub channel.
 
-    Query param: ?token=<admin_jwt>  (validated against PORTFOLIO_ADMIN_TOKEN).
+    Query param: ?token=<PORTFOLIO_ADMIN_TOKEN or portfolio admin JWT>
     Accepts incoming JSON: {"type": "reply", "session_id": "...", "content": "..."}
     to send a human reply into a specific session.
     """
-    from app.core.config import settings
-
-    token = websocket.query_params.get("token")
-    if not token or token != settings.PORTFOLIO_ADMIN_TOKEN:
+    token = websocket.query_params.get("token", "")
+    if not await _is_admin_token(token):
         await websocket.close(code=4001)
         return
 

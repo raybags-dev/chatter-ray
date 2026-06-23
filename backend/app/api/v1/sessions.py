@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,14 +11,31 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.models import ChatSession
+from app.core import redis as pubsub
+from app.models import ChatSession, ChatMessage
 
 router = APIRouter(prefix="/sessions", tags=["chat-sessions"])
 
 
-def _require_admin(token: str = Query(...)):
-    if token != settings.PORTFOLIO_ADMIN_TOKEN:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
+async def _require_admin(token: str = Query(...)) -> None:
+    if token == settings.PORTFOLIO_ADMIN_TOKEN:
+        return
+    # Also accept a valid portfolio admin JWT
+    if settings.PORTFOLIO_API_URL:
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=5) as client:
+                r = await client.get(
+                    f"{settings.PORTFOLIO_API_URL}/auth/me",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+                if r.status_code == 200:
+                    data = r.json()
+                    if data.get("is_superuser") or "admin" in str(data.get("roles", [])):
+                        return
+        except Exception:
+            pass
+    raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
 
 
 @router.get("", dependencies=[Depends(_require_admin)])
@@ -74,7 +93,7 @@ async def get_session(session_id: str, db: AsyncSession = Depends(get_db)) -> di
 
 @router.post("/{session_id}/takeover", dependencies=[Depends(_require_admin)])
 async def takeover(session_id: str, db: AsyncSession = Depends(get_db)) -> dict:
-    """Flag this session as human-active so the LLM stops responding."""
+    """Flag session as human-active, stop LLM, notify visitor Ray joined."""
     sess = await db.scalar(
         select(ChatSession).where(ChatSession.session_id == session_id)
     )
@@ -83,12 +102,22 @@ async def takeover(session_id: str, db: AsyncSession = Depends(get_db)) -> dict:
     sess.human_active = True
     sess.status = "escalated"
     await db.commit()
+
+    # Notify visitor that Ray has joined
+    msg = {
+        "type": "msg",
+        "sender": "system",
+        "content": "Oh good news — Raymond has joined the chat! I'll go right ahead and sign off now. It was really nice meeting you!",
+        "session_id": session_id,
+        "ts": time.time(),
+    }
+    await pubsub.publish(pubsub.session_channel(session_id), msg)
     return {"ok": True}
 
 
 @router.post("/{session_id}/release", dependencies=[Depends(_require_admin)])
 async def release(session_id: str, db: AsyncSession = Depends(get_db)) -> dict:
-    """Hand session back to the LLM agent."""
+    """Hand session back to the LLM agent, notify visitor."""
     sess = await db.scalar(
         select(ChatSession).where(ChatSession.session_id == session_id)
     )
@@ -97,6 +126,16 @@ async def release(session_id: str, db: AsyncSession = Depends(get_db)) -> dict:
     sess.human_active = False
     sess.status = "active"
     await db.commit()
+
+    # Notify visitor the AI is back
+    msg = {
+        "type": "msg",
+        "sender": "system",
+        "content": "Ray has stepped away — I'm back and happy to help with anything!",
+        "session_id": session_id,
+        "ts": time.time(),
+    }
+    await pubsub.publish(pubsub.session_channel(session_id), msg)
     return {"ok": True}
 
 
