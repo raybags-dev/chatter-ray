@@ -23,13 +23,20 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        # Use a separate version table so this service doesn't conflict with
+        # portfolio-base's alembic_version table on the shared Supabase DB.
+        version_table="alembic_version_chat",
     )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table="alembic_version_chat",
+    )
     with context.begin_transaction():
         context.run_migrations()
 
