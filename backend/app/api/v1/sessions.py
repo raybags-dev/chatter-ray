@@ -98,3 +98,13 @@ async def release(session_id: str, db: AsyncSession = Depends(get_db)) -> dict:
     sess.status = "active"
     await db.commit()
     return {"ok": True}
+
+
+@router.delete("/{session_id}/messages")
+async def delete_visitor_messages(session_id: str, db: AsyncSession = Depends(get_db)) -> dict:
+    """Delete all messages for a session (visitor self-service — session_id is the secret)."""
+    from sqlalchemy import delete as sql_delete
+    from app.models import ChatMessage
+    await db.execute(sql_delete(ChatMessage).where(ChatMessage.session_id == session_id))
+    await db.commit()
+    return {"ok": True}

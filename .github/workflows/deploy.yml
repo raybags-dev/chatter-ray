@@ -125,4 +125,7 @@ jobs:
               alembic upgrade head
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
             docker image prune -f
+            # Ensure UFW allows the compose network to reach the host-networked backend.
+            # This is idempotent — safe to run on every deploy.
+            ufw allow from 172.28.0.0/16 to any port 8010 proto tcp 2>/dev/null || true
             echo "Chat deployed — backend:8010  frontend:8011"
