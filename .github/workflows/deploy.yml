@@ -64,12 +64,13 @@ jobs:
           PORTFOLIO_API_URL: https://raybags.com/api/v1
           PORTFOLIO_ADMIN_TOKEN: ${{ secrets.PORTFOLIO_ADMIN_TOKEN }}
           SECRET_KEY: ${{ secrets.APP_SECRET_KEY }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,IMAGE_TAG,DATABASE_URL,REDIS_URL,GROQ_API_KEY,DISCORD_WEBHOOK,PORTFOLIO_API_URL,PORTFOLIO_ADMIN_TOKEN,SECRET_KEY
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,IMAGE_TAG,DATABASE_URL,REDIS_URL,GROQ_API_KEY,DISCORD_WEBHOOK,PORTFOLIO_API_URL,PORTFOLIO_ADMIN_TOKEN,SECRET_KEY,ENCRYPTION_KEY
           command_timeout: 15m
           script: |
             set -e
@@ -86,6 +87,7 @@ jobs:
             DISCORD_WEBHOOK=${DISCORD_WEBHOOK}
             PORTFOLIO_API_URL=${PORTFOLIO_API_URL}
             PORTFOLIO_ADMIN_TOKEN=${PORTFOLIO_ADMIN_TOKEN}
+            ENCRYPTION_KEY=${ENCRYPTION_KEY}
             CORS_ORIGINS=https://raybags.com
             ENVEOF
 
