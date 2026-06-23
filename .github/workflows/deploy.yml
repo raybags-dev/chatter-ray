@@ -58,7 +58,7 @@ jobs:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN_PERSONAL }}
           IMAGE_TAG: ${{ github.sha }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          REDIS_URL: redis://chat-redis:6379/0
+          REDIS_URL: redis://127.0.0.1:6380/0
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           PORTFOLIO_API_URL: https://raybags.com/api/v1
@@ -94,16 +94,13 @@ jobs:
               chat-backend:
                 image: ${DOCKERHUB_USERNAME}/raybags-chat-backend:${IMAGE_TAG}
                 restart: always
-                ports:
-                  - "8010:8010"
+                network_mode: host
                 env_file: .env.prod
-                depends_on: [chat-redis]
               chat-frontend:
                 image: ${DOCKERHUB_USERNAME}/raybags-chat-frontend:${IMAGE_TAG}
                 restart: always
                 ports:
                   - "8011:80"
-                depends_on: [chat-backend]
               chat-redis:
                 image: redis:7-alpine
                 restart: always
