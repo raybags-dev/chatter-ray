@@ -123,7 +123,7 @@ jobs:
               --env-file "$APP_DIR/.env.prod" \
               "${DOCKERHUB_USERNAME}/raybags-chat-backend:${IMAGE_TAG}" \
               alembic upgrade head
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans --force-recreate
             docker image prune -f
             # Ensure UFW allows the compose network to reach the host-networked backend.
             # This is idempotent — safe to run on every deploy.
