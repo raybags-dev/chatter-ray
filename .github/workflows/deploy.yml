@@ -119,9 +119,13 @@ jobs:
             cd "$APP_DIR"
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             docker compose -f docker-compose.prod.yml pull
-            # Run migrations on host network so the container can reach Supabase
-            # (Docker bridge networks on this VPS can't route to external Postgres)
-            docker compose -f docker-compose.prod.yml run --rm --network host chat-backend alembic upgrade head
+            # Run migrations on host network so the container can reach Supabase.
+            # docker compose run doesn't support --network on older Compose versions,
+            # so we use docker run directly with the pulled image.
+            docker run --rm --network host \
+              --env-file "$APP_DIR/.env.prod" \
+              "${DOCKERHUB_USERNAME}/raybags-chat-backend:${IMAGE_TAG}" \
+              alembic upgrade head
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
             docker image prune -f
             echo "Chat deployed — backend:8010  frontend:8011"
