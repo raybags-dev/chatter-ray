@@ -108,7 +108,7 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
             history = await _history(db, session_id)
 
         if not history:
-            greeting = _envelope("agent", "Hey! I'm Ray's assistant. Ask me anything about his work, or I can help you run the DataForge pipeline.", session_id)
+            greeting = _envelope("agent", "Hi! I'm Raymond's AI assistant. Welcome to his portfolio — if you have any inquiries, requests, or questions, feel free to ask me.", session_id)
             await websocket.send_json(greeting)
 
         while True:
