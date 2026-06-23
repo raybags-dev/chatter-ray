@@ -185,6 +185,59 @@ async def release(
     return {"ok": True}
 
 
+@router.post("/{session_id}/generate-token", dependencies=[Depends(_require_admin)])
+async def generate_token(
+    session_id: str,
+    name: str = Query(""),
+    email: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Generate a DataForge pipeline token via the portfolio API and send it to the visitor."""
+    import httpx
+
+    if not settings.PORTFOLIO_API_URL:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Portfolio API not configured")
+
+    # Call portfolio API to generate the token
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.post(
+                f"{settings.PORTFOLIO_API_URL}/pipeline/tokens",
+                json={"name": name or email, "email": email},
+                headers={"Authorization": f"Bearer {settings.PORTFOLIO_ADMIN_TOKEN}"},
+            )
+    except Exception as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Portfolio API unreachable: {exc}")
+
+    if r.status_code not in (200, 201):
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Portfolio API error: {r.text}")
+
+    token_data = r.json()
+    token_value = token_data.get("token") or token_data.get("access_token") or token_data.get("key", "")
+    if not token_value:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Portfolio API returned no token value")
+
+    message = (
+        f"Here is your DataForge access token:\n\n`{token_value}`\n\n"
+        "Keep it safe — you'll need it to authenticate with the DataForge pipeline API."
+    )
+
+    msg = {
+        "type": "msg",
+        "sender": "human",
+        "content": message,
+        "session_id": session_id,
+        "ts": time.time(),
+    }
+    async with AsyncSessionLocal() as write_db:
+        write_db.add(ChatMessage(session_id=session_id, sender="human", content=message))
+        await write_db.commit()
+    await pubsub.publish(pubsub.session_channel(session_id), msg)
+    await pubsub.publish(pubsub.ADMIN_CHANNEL, msg)
+
+    return {"ok": True, "token": token_value}
+
+
 @router.post("/{session_id}/close", dependencies=[Depends(_require_admin)])
 async def close_session(session_id: str, db: AsyncSession = Depends(get_db)) -> dict:
     """Mark a session as closed (soft-delete). Preserves message history."""
