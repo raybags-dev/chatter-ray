@@ -123,7 +123,11 @@ jobs:
               --env-file "$APP_DIR/.env.prod" \
               "${DOCKERHUB_USERNAME}/raybags-chat-backend:${IMAGE_TAG}" \
               alembic upgrade head
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans --force-recreate
+            # network_mode: host containers aren't tracked by compose across runs —
+            # compose tries to CREATE (not recreate) the backend while the old one
+            # still owns the name.  Force-remove it first so compose starts clean.
+            docker rm -f raybags-chat-chat-backend-1 2>/dev/null || true
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
             docker image prune -f
             # Ensure UFW allows the compose network to reach the host-networked backend.
             # This is idempotent — safe to run on every deploy.
