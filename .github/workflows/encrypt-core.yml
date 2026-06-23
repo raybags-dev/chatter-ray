@@ -1,0 +1,43 @@
+name: Encrypt core files
+
+on:
+  workflow_run:
+    workflows: ["Deploy"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  encrypt:
+    # Only run when the Deploy workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install cryptography
+        run: pip install cryptography
+
+      - name: Encrypt core files
+        env:
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+        run: python backend/scripts/encrypt_core.py
+
+      - name: Commit encrypted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backend/app/core/
+          git diff --cached --quiet && echo "Nothing to encrypt." && exit 0
+          git commit -m "chore: encrypt core files [skip ci]"
+          git push
