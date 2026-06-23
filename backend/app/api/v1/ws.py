@@ -270,9 +270,6 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
             )
 
             if human_active:
-                await safe_send(
-                    _envelope("system", "Ray is reviewing your message…", session_id)
-                )
                 continue
 
             try:
@@ -304,3 +301,9 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
     finally:
         redis_task.cancel()
         await ps.unsubscribe(pubsub.session_channel(session_id))
+        try:
+            await pubsub.publish(pubsub.ADMIN_CHANNEL, _envelope(
+                "system", "Visitor disconnected", session_id
+            ))
+        except Exception:
+            pass
