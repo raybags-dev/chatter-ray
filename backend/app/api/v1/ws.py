@@ -22,8 +22,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import time
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
@@ -177,10 +180,14 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
     ip = websocket.client.host if websocket.client else "unknown"
     visitor_name = websocket.query_params.get("name", "").strip() or None
 
-    async with AsyncSessionLocal() as db:
-        await _get_or_create_session(db, session_id, ip, visitor_name)
-
-    ps = await pubsub.subscribe(pubsub.session_channel(session_id))
+    try:
+        async with AsyncSessionLocal() as db:
+            await _get_or_create_session(db, session_id, ip, visitor_name)
+        ps = await pubsub.subscribe(pubsub.session_channel(session_id))
+    except Exception as exc:
+        logger.error("visitor_ws setup failed for %s: %s", session_id, exc)
+        await websocket.close(code=1011, reason="server_unavailable")
+        return
 
     # Serialize all sends to prevent concurrent WebSocket frame corruption
     _send_lock = asyncio.Lock()
