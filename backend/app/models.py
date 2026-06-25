@@ -50,3 +50,17 @@ class ChatMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     session: Mapped[ChatSession] = relationship(back_populates="messages")
+
+
+class ChatGuardrail(Base):
+    __tablename__ = "chat_guardrails"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # hard_block | soft_redirect | topic_scope | injection_defense
+    category: Mapped[str] = mapped_column(String(32), nullable=False)
+    rule: Mapped[str] = mapped_column(Text, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )

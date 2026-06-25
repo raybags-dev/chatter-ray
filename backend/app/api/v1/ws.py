@@ -32,9 +32,9 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core import redis as pubsub
 from app.core.database import AsyncSessionLocal
 from app.core.llm import run_agent
-from app.core import redis as pubsub
 from app.models import ChatMessage, ChatSession
 
 router = APIRouter()

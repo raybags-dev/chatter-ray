@@ -8,17 +8,19 @@ from datetime import datetime, timedelta
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1 import guardrails, sessions, ws
 from app.core.config import settings
-from app.api.v1 import ws, sessions
 
 logger = logging.getLogger(__name__)
 
 
 async def _periodic_cleanup() -> None:
     """Close stale (inactive >30 min) non-escalated sessions every 10 minutes."""
-    from sqlalchemy import and_, func, select, update as sql_update
+    from sqlalchemy import and_, func, select
+    from sqlalchemy import update as sql_update
+
     from app.core.database import AsyncSessionLocal
-    from app.models import ChatSession, ChatMessage
+    from app.models import ChatMessage, ChatSession
 
     while True:
         await asyncio.sleep(600)
@@ -86,6 +88,7 @@ app.add_middleware(
 
 app.include_router(ws.router)
 app.include_router(sessions.router, prefix="/api/v1")
+app.include_router(guardrails.router, prefix="/api/v1")
 
 
 @app.get("/health")

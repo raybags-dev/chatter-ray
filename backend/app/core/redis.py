@@ -1,2 +1,50 @@
-# RAYBAGS_ENCRYPTED
-Z0FBQUFBQnFPcV8xY1I2ZWlpTkpsYUxfUUtjVFFUcU9MdjhSeS0xaVBZUm5ld0tpREU4WDdRVFMzQzJ1MGwxaE9YN0QyOGlkX2dwYlVscWh6Mjc1OEhoSnlCak5taERNQ2VuX0pTakI0ZjlqcnJIQ2JmNVYzVlM0ZmZUTVg1TFNDaWQ5aExxOEM2TWc3Szh3XzdKS3Q1TG5lT2hDdWNZbDFfTTdreUwtLUFZU1VmZGU2Rm44bHFkT25YRFNISkthXzI1Skx4QXhFdVZOdzQ1TlpWUGdiU1JxankwejJvUW9KMGJCMlBDNElTNmFXSnFidTgzakx2OVdqSnE0YzZDYlZCRlV5T2pGRjlJV0JMaVdjeUlkZk1SQ3BUUVJoajdvSkdZMnowWDZfNXo4bHdlWWhTUTQxVWQwZUlidlpaSExtZXhJUzZnTTJWZU9hajFjaTEzN01GZnE3TEdfWTAwWS1RcnRkQTFXcXJrN2E3czhWc0gwVkdNSWZwTHNDb2pvcWpZaGpVdEx6T3FvUG1VOUh1bnEyeGNfeVgzeHVkY2V6aV9UdGk0Y3J3ZFJOdVdtVmh1bDQwNDFQMWhaREZnRk9vS1JmQ2pLV0huTGFfb0otbElmaGk0TThHTkcwU2ltQkhURjdzOVNZR1VUQlJCa3RGTWRPcVVHby1YS0RPYnZDdzFpTFBidU91dGEyUEdiSWVmTUI5SWhPbk53NkNzbVNoeng1NE9CNEhDS1pzQ1lOMThrQ1ljMUNLOVRGOVZrbE1ZN2tVNzFiUVRuWW54QlpreGRJODZJV1FZc3ZKWEM0Q1NpQkE1VmJuT1gtVDFzUWlDS2NpTXZEY250U29rZ3FsZXlDQ1ZEQkpENFJMbk9ZeUZlUzltaERkRTc3WHByWktEblBMMGR0d2daSi1yaHJORHNWajNHMU41cnN4QlBfOG1Ob250U1V6b2NCalNQLU4xYjVLYm45QkVrR0JNVXZ6WW45dWRULVhVSVZ0aVJrZTBKVkdOczZnQXc2ZmowQThDbUpZVFdsTG40N01neEZneG5CV1UzaEN3RmNPeDh0UE5JS1p1QXo5TkNsdzhLWVFHTm80OUhDRzJDbmFHUkFpLV8yUW0wc0drMnh3LTMwZFhYLWlxcDZDZ1k4dmtKZHBZcEwyZnhmOUp6ek0tdlFXeUU0aFRvcGhVRnRVTEhWZ21HUFZRVVdqVjJjcE5USmxNdkM5cnEzVmlpZVlqNFZwSzUyRGR4ek5PV204RGlxV2NnUDNtOHBMVjdYRzBza1FoNjRiQUVKdkVha2d3OTFpQ0FNMEJRUW15ckJzbzFKd21YM0FKWGd3VzhDUTVJNm9uc1Jia2RvZ2dWbTVzS3RhLXdBdHdDVGxuOF8zUGRDdmZieVJyVEtsZTY1bGFzUi1fbDJtTm1IS3Q5ZTBwZ3FITWU3VzFnZzB1SHFwUlhjaHZZOEN4MFotdjRpUmdsMW5zQ1Zldk40eElBOHo0a3p6OW1CSVFLUUpZVURCcGp3N3JTaV9CT1E0Rkd5VlFBTnRTaHZ1ZEt2UWJoOHhrQ3RTcmZpYXFVaTg0amNGNF9tSTdrQmMwbWlWVnY0VDYtd2J1ZEMxN2RGUGtXOG1fQ1hTeEY3SHQ0ZURodE5mMmhOOS1jaVZRY0h4NTBxVVZGZUo4SDdZR3doUXhvY2VzVUNtRy1CekJfMkFYZXZfdGhiV3RhTnFxQUN3dktIeXYtM2UzX2VVekRLczl2eTU5TngxbzJ2bUplZEJiVGxnRUN4QnA1MVhXTmxrSjVYLU8zRFdUZnRPcy0zOUdhY1JjNmNlVnQ1M0k0eFM3akhadGJtX1VIRVQxaEhRMmk1X1h0czNHVGthSTltZ200LVNMbkoxUXFmX21PNjF4azZNS1FuWkdVWkxxejRsbjh2TnlwVUJRVk1iSTc5a1RUY0tHQmZZRWI2SWctdW9oeWdRMm5ObXdjTDFicnc3Y0sxLU9VcW5uWDNkeVRUSnFIY0VlQXlUenNGU3ZvUlVoOUxlUk1veG1tNDJDNXRyaGwtMGJIUEdwZmFOWGhXVHJEcWIySHMxU0FmSTczQlJOZ2U5S2k0WVpDUEhTZnFzVkl3MmJUS1B0THd0N1EydWJYWjBYVXhqM2JiQlJ4ckdsZnpkMGhNTFVxbHUwWUFKQ3UxLW54al8tdEoyRmYyM3Fvd3psS2JuTUpJcVRwRG8xYXZXNVlrN0lmVFRUUFBndVBndEFUcFZjQzY1bS03TTJBcjVQaFRBPT0=
+"""Redis pub/sub helpers for routing messages across WebSocket connections.
+
+Each chat session gets a channel key `chat:session:{session_id}`.
+Admin connections subscribe to `chat:admin` to see all new messages.
+
+Message envelope (JSON):
+  {
+    "type": "user_msg" | "agent_msg" | "human_msg" | "system",
+    "session_id": str,
+    "content": str,
+    "sender": "user" | "agent" | "human",
+    "ts": float,
+  }
+"""
+
+from __future__ import annotations
+
+import json
+from typing import Any
+
+import redis.asyncio as aioredis
+
+from app.core.config import settings
+
+_pool: aioredis.Redis | None = None
+
+
+def get_redis() -> aioredis.Redis:
+    global _pool
+    if _pool is None:
+        _pool = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+    return _pool
+
+
+def session_channel(session_id: str) -> str:
+    return f"chat:session:{session_id}"
+
+
+ADMIN_CHANNEL = "chat:admin"
+
+
+async def publish(channel: str, payload: dict[str, Any]) -> None:
+    await get_redis().publish(channel, json.dumps(payload))
+
+
+async def subscribe(*channels: str):
+    """Return an async pubsub object subscribed to the given channels."""
+    ps = get_redis().pubsub()
+    await ps.subscribe(*channels)
+    return ps

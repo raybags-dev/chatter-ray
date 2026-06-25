@@ -1,2 +1,47 @@
-# RAYBAGS_ENCRYPTED
-Z0FBQUFBQnFPcV8xUl92bUUtODFJZGdFek9ILVc4R1M3dEhuenZNc1JQcXpUQW9Oa2ZIQklMQ3VVLWdxRlBTcHJqamh5ZTdoSUJqSUplX2NfMzhKUURnSllyYXRSYmxaN0FmQ1poZElTT1MtS2dyMlBSTmRvenZKU0tuM1NMU2JpVUItNXFYR1J1V3ZRZjBqQWpZaFhucW9vd1JpczIwUmNRZmU1VkJWZU95R3VVUmp3cXQ5Y0ZhQ09CSThpNXk4SU9HOGh4VUo0aE9VX1NQUERxU2tSR3p6VHltb1RxaXNVTTAwRlR6QWpsaDJJZ3JDYW8xZ0hjMUlBUkNlZGswNHpVdUFxYW9rWWRiY081aGFSQUw3RHRiNXNfRGg2Mk5jdXhUTjgyQi03QzM1anFrbUZJU0VrSm8wblN6cy05cC1FMlgwZEdLY3BBN3JPNjdCOWp3QkdlYlViOE1ENnVFOXJvZUJGbWtGMjBucGJTbmZPVnJkMFhHZ2t3OS1lRVZPTXdfV0phMzBjSFpmVXFhSWJDYXBDVVpKR1FVbTV5WkV3VGs4RUV2SW1YODFEOFFxeFJONGRIOGpueVRoNmZxQVFhQlhUODkwc2JZb2tDVmlBR2ZycDl4bUtSR0ZTY1ZhcjBWYW1TNXo5N1dTcmRiNlFGRGxtdXJxRHpZZXJub2JCcWZ1RkhmT0xTcW5PTDNqbjUyZ19fY0NZWGlhYm93cHhxWUZzR0pFdi1OTlI1Slh2ajRlTXZKMjRGVF8wMUJXdk9kYWlOX2ZHV0RGT24xSVo2QTJxR3dhSmJ2VjZ5LWNBeDJGcGVZMjhRTERja1luSlkxNDlWQ2YyVnRIQkNDeGw4ejhFa1VUMC12T0tSa2N1SmxPOG81RWt2VXpsOHVjRDFHaFdrdUNZV3NxWV9pYVZWeU1JZDg2QnBJMWo4Y3h4T0pIV19EMU5JNWJfa0ZqSnJETXpqLWNzQ0p5Y3BjRG54UkphNFpxXzh6Q2J6REllc2o1LW1BSTZEX1pHRzlpc2tWTklUdXZISzN2ZlFtUC1xeHlrLWEwSFJ0c0xlQ0RQZFVvY2lGaGFGdkV6Ykw3VWRudVBIbGpwc0tHV2RsME44c3lUbkp3MTZSWkVVQjZGSExhanlWYTIxVzBjajU1aGlKamtvWV9FMEY4WThpRlduR3BlRnNTb29rUHVfQmNVY21VOXpLRV8wVmF1U1pSajRtelQ2WEVyV19qVDBVVnFwQTgydVF6djN4YmkwWk5IeVR4Sml3SUpCZlhTZV9xLWJJYzc0Yk9Nd1JGSnVtZmpPdmU2MEVENVhzY2hEdUhic2hmLXZPajZmS2l6X3ViVktpUUlQLXhIR3FJME5DOVVtTjZQN3FTMUoxWkRobXl6dGN6TFcxeHRQVm5veDBQbnJwb2lwMGlNT3E2WW1FNlRPQTktRmkyallqYXJnN3djS1dnVTRsMGNVdDhpUlhFUG0xVkVOS1pqc2YtclVieGxIRHhqM1VBdDh4bXBSUVA1MjlpMVZiQWwycS1rbmRqWlktWG9oSUtPcTk0bmYwQmZJSFpwb0NFdHZicEZUeVBhaUx6UmR0cm15aFZ3VXRleTh1V1Z0czdYajlEelhoMTNBLTNFMUNmdEtCR3dvb3o0LWR6eWZ2eUgzcDJZaklZNkNwaTN2N2doZXVkUkJMVkZlazF6UWlWUWlaV0pfOV9JTDZpNnd4b2sxcU9Gcm5XZThPMzlLYXNyMjFObzZlNVZ3aFlLNGxyVjRnbVdvSWJvQkZkRHhVY2lwTnJCSVdkUDlTUXVKOUtvcnlET2NXM0g3LTBOazZRRGRRUVgtQmJBamNqWmxkOE9rZnhPSTZQSk5uYkZxOUhpSFNjeFlYZGFjYjRITS10dHhYQ1F4dzZKekt2dGdRaWdfOFZWRWVwbkNrNHZrdjJFTDZiWWxGY1NIcmJ3aHZlVFhhV1pneU9hamlvYXJ3Yy1vdjZidmxYU2tBZDY4V1JyVjVCUVM2MG92cGNTZEdqR3Z4TXNjbzNKMG9DYVVXM3Q5cG83SmNZYURnbXZoUGE3RTVnX24zemY0b2tpZHUtd0lzVGhIOGtxbzNNRUFLaXoxbHlLTVc3Q2pWTmRORGJURFFxYTZVUkg5cG1SYkJINElyNGFlMGhXcmFoV1NaNV9oUmtGZE40aFBUcUFHbGdaVFo4d09HMUlibENhOEVqNVRUYkxaeHQtQ3FKbHNPczJ3VWpSbzZ3NzFmaUNwQ1pyRExEeThoLXF3PT0=
+from __future__ import annotations
+
+from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=(".env", "../.env"),
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
+    # service
+    ENVIRONMENT: str = "local"
+    DEBUG: bool = True
+    SECRET_KEY: str = "dev-insecure-000000000000000000000000000000"
+
+    # database (same Postgres as portfolio-base)
+    DATABASE_URL: str = "postgresql+asyncpg://raybags:raybags@localhost:5432/raybags"
+
+    # redis (for pub/sub session routing)
+    REDIS_URL: str = "redis://localhost:6379/1"
+
+    # LLM
+    GROQ_API_KEY: str | None = None
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    # portfolio API (to issue tokens, etc.)
+    PORTFOLIO_API_URL: str = "https://raybags.com/api/v1"
+    PORTFOLIO_ADMIN_TOKEN: str | None = None  # service-to-service admin JWT
+
+    # notifications
+    DISCORD_WEBHOOK: str | None = None
+
+    # CORS
+    CORS_ORIGINS: str = "http://localhost:3000,https://raybags.com"
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

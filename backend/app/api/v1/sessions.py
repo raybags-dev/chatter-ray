@@ -10,10 +10,10 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.config import settings
-from app.core.database import get_db, AsyncSessionLocal
 from app.core import redis as pubsub
-from app.models import ChatSession, ChatMessage
+from app.core.config import settings
+from app.core.database import AsyncSessionLocal, get_db
+from app.models import ChatMessage, ChatSession
 
 router = APIRouter(prefix="/sessions", tags=["chat-sessions"])
 
@@ -281,7 +281,9 @@ async def cleanup_stale(db: AsyncSession = Depends(get_db)) -> dict:
     Returns the number of sessions closed.
     """
     from datetime import datetime, timedelta
-    from sqlalchemy import and_, update as sql_update
+
+    from sqlalchemy import and_
+    from sqlalchemy import update as sql_update
 
     cutoff = datetime.utcnow() - timedelta(minutes=30)
 
