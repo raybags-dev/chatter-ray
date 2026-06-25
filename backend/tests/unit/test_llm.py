@@ -157,6 +157,64 @@ async def test_escalate_to_human_pings_discord():
     mock_ping.assert_awaited_once_with("Visitor asking about hiring", "session-escalate")
 
 
+async def test_embedded_escalate_call_in_content():
+    """Model embeds <function=escalate_to_human> in content — should be handled cleanly."""
+    fake_response = MagicMock()
+    msg = MagicMock()
+    msg.tool_calls = None
+    msg.content = (
+        "I can't share that. "
+        '<function=escalate_to_human>{"reason": "sensitive request"}</function>'
+    )
+    fake_response.choices = [MagicMock(message=msg)]
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=fake_response)
+    mock_ping = AsyncMock()
+
+    with (
+        patch("app.core.llm.settings") as mock_settings,
+        patch("app.core.llm.AsyncGroq", return_value=mock_client),
+        patch("app.core.llm._ping_discord", mock_ping),
+    ):
+        mock_settings.GROQ_API_KEY = "test-key"
+        mock_settings.GROQ_MODEL = "llama-3.3-70b-versatile"
+
+        from app.core.llm import run_agent
+        reply, tool = await run_agent([], "session-embedded")
+
+    assert tool == "escalate_to_human"
+    assert "<function=" not in reply
+    assert "flagged" in reply.lower() or "ray" in reply.lower()
+    mock_ping.assert_awaited_once_with("sensitive request", "session-embedded")
+
+
+async def test_embedded_call_stripped_from_plain_text():
+    """Any residual <function=...> syntax is stripped from plain text replies."""
+    fake_response = MagicMock()
+    msg = MagicMock()
+    msg.tool_calls = None
+    msg.content = "Here is some info. <function=unknown_tool>{}</function>"
+    fake_response.choices = [MagicMock(message=msg)]
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=fake_response)
+
+    with (
+        patch("app.core.llm.settings") as mock_settings,
+        patch("app.core.llm.AsyncGroq", return_value=mock_client),
+    ):
+        mock_settings.GROQ_API_KEY = "test-key"
+        mock_settings.GROQ_MODEL = "llama-3.3-70b-versatile"
+
+        from app.core.llm import run_agent
+        reply, tool = await run_agent([], "session-strip")
+
+    assert "<function=" not in reply
+    assert tool is None
+    assert "Here is some info." in reply
+
+
 async def test_escalate_skips_discord_when_no_webhook():
     """_ping_discord is a no-op when DISCORD_WEBHOOK is not set."""
     with patch("app.core.llm.settings") as mock_settings:
