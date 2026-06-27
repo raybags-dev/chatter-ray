@@ -39,6 +39,9 @@ from app.models import ChatMessage, ChatSession
 
 router = APIRouter()
 
+# Must stay below Cloudflare's 100-second WebSocket idle timeout.
+_HEARTBEAT_INTERVAL = 25
+
 
 def _now() -> float:
     return time.time()
@@ -137,16 +140,35 @@ async def admin_ws(websocket: WebSocket) -> None:
     await websocket.accept()
     ps = await pubsub.subscribe(pubsub.ADMIN_CHANNEL)
 
+    # Lock prevents concurrent frame writes from _listener and _heartbeat.
+    _send_lock = asyncio.Lock()
+
+    async def safe_send_admin(payload: dict) -> None:
+        async with _send_lock:
+            await websocket.send_json(payload)
+
     async def _listener() -> None:
-        async for raw in ps.listen():
-            if raw["type"] != "message":
-                continue
-            try:
-                await websocket.send_json(json.loads(raw["data"]))
-            except Exception:
-                break
+        try:
+            async for raw in ps.listen():
+                if raw["type"] != "message":
+                    continue
+                try:
+                    await safe_send_admin(json.loads(raw["data"]))
+                except Exception:
+                    break
+        except Exception:
+            pass
+
+    async def _heartbeat() -> None:
+        try:
+            while True:
+                await asyncio.sleep(_HEARTBEAT_INTERVAL)
+                await safe_send_admin({"type": "ping"})
+        except Exception:
+            pass
 
     listen_task = asyncio.create_task(_listener())
+    heartbeat_task = asyncio.create_task(_heartbeat())
 
     try:
         while True:
@@ -170,6 +192,7 @@ async def admin_ws(websocket: WebSocket) -> None:
     except WebSocketDisconnect:
         pass
     finally:
+        heartbeat_task.cancel()
         listen_task.cancel()
         await ps.unsubscribe(pubsub.ADMIN_CHANNEL)
 
@@ -219,7 +242,16 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
         except Exception:
             pass
 
+    async def _heartbeat() -> None:
+        try:
+            while True:
+                await asyncio.sleep(_HEARTBEAT_INTERVAL)
+                await safe_send({"type": "ping"})
+        except Exception:
+            pass
+
     redis_task = asyncio.create_task(_redis_listener())
+    heartbeat_task = asyncio.create_task(_heartbeat())
 
     try:
         async with AsyncSessionLocal() as db:
@@ -306,6 +338,7 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
     except WebSocketDisconnect:
         pass
     finally:
+        heartbeat_task.cancel()
         redis_task.cancel()
         await ps.unsubscribe(pubsub.session_channel(session_id))
         try:
