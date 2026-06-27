@@ -163,7 +163,8 @@ async def admin_ws(websocket: WebSocket) -> None:
         try:
             while True:
                 await asyncio.sleep(_HEARTBEAT_INTERVAL)
-                await safe_send_admin({"type": "ping"})
+                async with _send_lock:
+                    await websocket.send_bytes(b"")
         except Exception:
             pass
 
@@ -246,7 +247,8 @@ async def visitor_ws(websocket: WebSocket, session_id: str) -> None:
         try:
             while True:
                 await asyncio.sleep(_HEARTBEAT_INTERVAL)
-                await safe_send({"type": "ping"})
+                async with _send_lock:
+                    await websocket.send_bytes(b"")
         except Exception:
             pass
 
