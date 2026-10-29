@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 
 async def test_empty_guardrails_no_section():
     """When no guardrails exist, the built prompt must NOT contain the guardrails section."""

@@ -62,6 +62,40 @@ async def list_sessions(
     ]
 
 
+@router.post("/reset", dependencies=[Depends(_require_admin)])
+async def reset_chat(db: AsyncSession = Depends(get_db)) -> dict:
+    """Manual recovery control: close all stale sessions NOW and purge old ones.
+
+    Use when the chat feels stuck (e.g. after a connection storm). Visitors
+    simply start fresh sessions; the LLM, Redis and guardrails are untouched.
+    """
+    from datetime import datetime, timedelta
+
+    from sqlalchemy import and_
+    from sqlalchemy import delete as sql_delete
+    from sqlalchemy import update as sql_update
+
+    result = await db.execute(
+        sql_update(ChatSession)
+        .where(ChatSession.status.in_(["active", "idle"]))
+        .values(status="closed", human_active=False)
+    )
+    closed = result.rowcount or 0
+
+    purge_cutoff = datetime.utcnow() - timedelta(days=7)
+    purged = await db.execute(
+        sql_delete(ChatSession).where(
+            and_(ChatSession.status == "closed", ChatSession.updated_at < purge_cutoff)
+        )
+    )
+    await db.commit()
+    return {
+        "ok": True,
+        "closed_sessions": closed,
+        "purged_sessions": purged.rowcount or 0,
+    }
+
+
 @router.get("/{session_id}", dependencies=[Depends(_require_admin)])
 async def get_session(session_id: str, db: AsyncSession = Depends(get_db)) -> dict:
     sess = await db.scalar(
@@ -213,7 +247,9 @@ async def generate_token(
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Portfolio API error: {r.text}")
 
     token_data = r.json()
-    token_value = token_data.get("token") or token_data.get("access_token") or token_data.get("key", "")
+    token_value = (
+        token_data.get("token") or token_data.get("access_token") or token_data.get("key", "")
+    )
     if not token_value:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Portfolio API returned no token value")
 

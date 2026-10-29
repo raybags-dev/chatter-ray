@@ -64,3 +64,26 @@ class ChatGuardrail(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+
+
+class ChatAIConfig(Base):
+    """Singleton row (id=1): which AI provider the chat agent uses.
+
+    Editable at runtime from the portfolio admin panel; the LLM reads it with
+    a short TTL cache. api_key is nullable - when empty the provider falls back
+    to its server-side env key (DEEPSEEK_API_KEY, GROQ_API_KEY, ...).
+    """
+
+    __tablename__ = "chat_ai_config"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # deepseek | groq | claude | gemini
+    provider: Mapped[str] = mapped_column(String(32), nullable=False, default="deepseek")
+    # optional model override; empty = provider default
+    model: Mapped[str | None] = mapped_column(String(128))
+    # optional per-provider API key; empty = env fallback
+    api_key: Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )

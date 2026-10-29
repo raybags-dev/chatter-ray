@@ -14,7 +14,6 @@ from starlette.testclient import TestClient
 from app.main import app
 from tests.conftest import TEST_ADMIN_TOKEN
 
-
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 class _FakePubSub:

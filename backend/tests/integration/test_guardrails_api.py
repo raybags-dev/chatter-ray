@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
 from tests.conftest import TEST_ADMIN_TOKEN
-
 
 # ── auth ─────────────────────────────────────────────────────────────────────
 

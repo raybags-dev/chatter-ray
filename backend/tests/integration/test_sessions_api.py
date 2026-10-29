@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import pytest
 from sqlalchemy import select
 
 from app.models import ChatMessage, ChatSession
 from tests.conftest import TEST_ADMIN_TOKEN
-
 
 # ── auth ─────────────────────────────────────────────────────────────────────
 

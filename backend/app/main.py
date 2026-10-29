@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import guardrails, sessions, ws
+from app.api.v1 import ai_config, guardrails, sessions, ws
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 async def _periodic_cleanup() -> None:
     """Close stale (inactive >30 min) non-escalated sessions every 10 minutes."""
     from sqlalchemy import and_, func, select
+    from sqlalchemy import delete as sql_delete
     from sqlalchemy import update as sql_update
 
     from app.core.database import AsyncSessionLocal
@@ -55,6 +56,20 @@ async def _periodic_cleanup() -> None:
                     )
                     await db.commit()
                     logger.info("Auto-closed %d stale sessions", len(stale_ids))
+
+                # Auto-remove closed sessions older than 7 days (messages cascade).
+                purge_cutoff = datetime.utcnow() - timedelta(days=7)
+                purged = await db.execute(
+                    sql_delete(ChatSession).where(
+                        and_(
+                            ChatSession.status == "closed",
+                            ChatSession.updated_at < purge_cutoff,
+                        )
+                    )
+                )
+                if purged.rowcount:
+                    await db.commit()
+                    logger.info("Purged %d closed sessions older than 7d", purged.rowcount)
         except Exception as exc:
             logger.error("Session cleanup error: %s", exc)
 
@@ -89,6 +104,7 @@ app.add_middleware(
 app.include_router(ws.router)
 app.include_router(sessions.router, prefix="/api/v1")
 app.include_router(guardrails.router, prefix="/api/v1")
+app.include_router(ai_config.router, prefix="/api/v1")
 
 
 @app.get("/health")

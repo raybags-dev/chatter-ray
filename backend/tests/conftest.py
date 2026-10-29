@@ -16,10 +16,9 @@ os.environ.setdefault("SECRET_KEY", "test-secret-key-000000000000000000000000000
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 # ────────────────────────────────────────────────────────────────────────────
 
-import pytest
 import pytest_asyncio
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 # Force fresh settings read with our env vars.
